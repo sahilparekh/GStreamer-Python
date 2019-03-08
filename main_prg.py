@@ -21,6 +21,7 @@ class mainStreamClass:
         self.cam_queue = None
         self.stopbit = None
         self.camlink = '' #Add your RTSP cam link
+        self.framerate = 6
     
     def startMain(self):
 
@@ -33,7 +34,8 @@ class mainStreamClass:
         self.stopbit = mp.Event()
         self.camProcess = vs.StreamCapture(self.camlink,
                              self.stopbit,
-                             self.cam_queue)
+                             self.cam_queue,
+                            self.framerate)
         self.camProcess.start()
 
         # calculate FPS

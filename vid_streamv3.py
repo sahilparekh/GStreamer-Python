@@ -28,7 +28,7 @@ class StreamCommands(Enum):
 
 class StreamCapture(mp.Process):
 
-    def __init__(self, link, stop, outQueue):
+    def __init__(self, link, stop, outQueue, framerate):
         """
         Initialize the stream capturing process
         link - rstp link of stream
@@ -40,6 +40,7 @@ class StreamCapture(mp.Process):
         self.streamLink = link
         self.stop = stop
         self.outQueue = outQueue
+        self.framerate = framerate
         self.currentState = StreamMode.INIT_STREAM
         self.pipeline = None
         self.source = None
@@ -80,7 +81,7 @@ class StreamCapture(mp.Process):
     def run(self):
         # Create the empty pipeline
         self.pipeline = Gst.parse_launch(
-            'rtspsrc name=m_rtspsrc ! rtph264depay name=m_rtph264depay ! avdec_h264 name=m_avdech264 ! videoconvert name=m_videoconvert ! appsink name=m_appsink')
+            'rtspsrc name=m_rtspsrc ! rtph264depay name=m_rtph264depay ! avdec_h264 name=m_avdech264 ! videoconvert name=m_videoconvert ! videorate name=m_videorate ! appsink name=m_appsink')
 
         # source params
         self.source = self.pipeline.get_by_name('m_rtspsrc')
@@ -99,6 +100,11 @@ class StreamCapture(mp.Process):
 
         # convert params
         self.convert = self.pipeline.get_by_name('m_videoconvert')
+
+        #framerate parameters
+        self.framerate_ctr = self.pipeline.get_by_name('m_videorate')
+        self.framerate_ctr.set_property('max-rate', self.framerate/1)
+        self.framerate_ctr.set_property('drop-only', 'true')
 
         # sink params
         self.sink = self.pipeline.get_by_name('m_appsink')
