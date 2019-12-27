@@ -51,6 +51,8 @@ class StreamCapture(mp.Process):
         self.newImage = False
         self.frame1 = None
         self.frame2 = None
+        self.num_unexpected_tot = 40
+        self.unexpected_cnt = 0
 
 
 
@@ -170,6 +172,7 @@ class StreamCapture(mp.Process):
                     self.outQueue.put((StreamCommands.FRAME, self.image_arr), block=False)
 
                 self.image_arr = None
+                self.unexpected_cnt = 0
 
 
             if message:
@@ -189,6 +192,9 @@ class StreamCapture(mp.Process):
                               (old_state.value_nick, new_state.value_nick))
                 else:
                     print("Unexpected message received.")
+                    self.unexpected_cnt = self.unexpected_cnt + 1
+                    if self.unexpected_cnt == self.num_unexpected_tot:
+                        break
 
 
         print('terminating cam pipe')
